@@ -2,7 +2,7 @@
 
 cp avionfile.vierge avionfile.conf
 rm miaou.txt
-wget http://vsi.us.to/miaou.txt
+wget http://vsi.xx.yy/miaou.txt
 sed 's/\"//g' miaou.txt > miaou2.txt
 mv miaou2.txt miaou.txt
 nline=0
@@ -19,5 +19,5 @@ do
 	done < sub.txt
 	echo "" >> avionfile.conf
 done < miaou.txt
-cp avionfile.conf /etc/bind/getmmsg.us.to
+cp avionfile.conf /etc/bind/getmmsg.xx.yy
 service bind9 reload
