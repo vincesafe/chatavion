@@ -12,6 +12,8 @@ Chatavion est un système de messagerie fonctionnant uniquement par DNS.
 Il peut ainsi être utilisé sur tous les réseaux publics sans authentification ni paiement.
 Il a été créé pour discuter depuis les réseaux Wi-Fi d'avion sans payer et a rempli ce rôle plusieurs fois.
 
+Conçu initialement comme une preuve de concept d'envoi de message d'urgence en avion, aucun soin n'a été apporté à la conception ou au code (ça se voit très vite). C'est du bricolage et de l'assemblage de code dégueulasse. Mais ça marche (à peu près) !
+
 Chatavion se décompose en 4 parties : 
  - Un client, utilisable en ligne de commande sous Android, conçu pour fonctionner avec Termux
  - Un serveur d'envoi (SEND) qui nécessite bash, un compilateur (gcc), le programme base32 et un serveur web (Apache)
