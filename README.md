@@ -60,3 +60,36 @@ Le programme ajoute la date et le préfixe "Avion : " au message, puis l'ajoute 
 
 L'idée est que ce fichier texte sera récupéré par le serveur de réception pour être redistribué sous forme de DNS.
 Le programme se bloque pendant 35 secondes pour éviter de récupérer de nouvelles tentatives d'envoi du même message, puis reprend du début.
+
+3. Serveur de réception
+
+Le serveur de réception est celui qui a l'adresse 66.66.166.166 et le nom de domaine chatrecv.ca. 
+Il est le nameserver du domaine getmmsg.xx.yy. 
+Ainsi, lorsqu'une requête DNS demandant "ohyeah.getmmsg.xx.yy" est émise sur Internet, le serveur d'envoi la reçoit et l'interprète. 
+
+Comme pour le serveur d'envoi, il s'agit d'un prototype extrêmement instable, le serveur utilisé peut planter sans prévenir. 
+Il ne doit pas être utilisé pour autre chose. Tous les fichiers téléchargés depuis ce dépôt doivent être placés dans un même répertoire avec autorisation d'écriture. Toutes les commandes doivent être lancées en root.
+
+Le serveur RECV fonctionne selon un assemblage de plusieurs programmes, notamment le serveur DNS bind. Bind doit être installé avec sa configuration par défaut. Le fichier /etc/bind/named.conf.local doit être remplacé par le fichier named.conf.local présent sur ce dépôt. Il est nécessaire de remplacer getmmsg.xx.yy par le nom NS qui renvoit vers le serveur de réception.
+
+Les fichiers nécessaire au fonctionnement du RECV sont avionfile.vierge, ip.sh, dnavion.sh et cron.sh (facultatif si le serveur permet de définir des cron). avionfile.vierge doit être modifié en remplaçant getmmsg.xx.yy par le nom qui convient, comme pour named.conf.local. L'adresse IP 66.66.166.166 doit aussi être remplacée par celle du serveur de réception.
+
+Dans dnavion.sh, même chose pour getmmsg.xx.yy et pour vsi.xx.yy, qui doit être remplacé par l'adresse du serveur d'envoi.
+
+Pour faire fonctionner le serveur, bind doit d'abord être démarré, et dnavion.sh doit être lancé à intervalles réguliers, 
+soit en programmant un cron qui le lance toutes les minutes par exemple, soit en lançant cron.sh en tâche de fond. Exemple :
+
+```nohup bash cron.sh &```
+
+dnavion.sh récupère miaou.txt (le log de conversation) depuis le serveur SEND. Il supprime tous les guillemets pour éviter des plantages.
+
+Il réalise une copie d'un template vierge (avionfile.vierge). Ce fichier de configuration est rempli avec les messages du log selon le pattern suivant :
+ - mX est un enregistrement de type texte (TXT) qui contient le message brut contenu à la ligne X
+ - mX.nY est un enregistrement de type adresse IP (A) qui contient 4 caractères du message X avec l'offset Y transformés en valeurs numériques selon l'encodage ASCII (cette transformation est opérée par ip.sh)
+ 
+Ainsi, une requête DNS de type TXT sur m1.getmmsg.xx.yy renverra le premier message du log de conversation, m2.getmmsg.xx.yy, le deuxième, etc.
+
+Les requêtes DNS de type TXT fonctionnent sur certains réseaux, comme le Wi-Fi du TGV, mais pas sur d'autres, comme le Wi-Fi de la compagnie aérienne ANA (c'est du vécu). 
+Alternativement, il est possible de récupérer les messages sous forme de nombres, stockés dans des adresses IP. 
+Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverra les 4 premiers caractères du premier message. m1.n2.getmmsg.xx.yy renverra les caractères 5 à 8 du premier message. m2.n1.getmmsg.xx.yy, les 4 premiers du deuxième message, etc.
+
