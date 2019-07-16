@@ -40,3 +40,13 @@ gcc -o sousdom sousdom.c
 
 Le programme "rd2" doit aussi être compilé sur le serveur SEND. Le fichier source est recvdns.c. Exemple :
 gcc -o rd2 recvdns.c
+
+Une fois ces préparation effectuées, il n'y a plus qu'à lancer chat.sh en tâche de fond. Exemple :
+nohup bash chat.sh &
+
+chat.sh appelle rd2, qui attend une requête DNS. Quand une requête du type "ohyeah.emgt.xx.yy" est interceptée, rd2 enregistre le nom demandé dans un fichier "req". rd2 devait initialement renvoyer une réponse, mais je n'ai jamais réussi à forger un datagramme correct, alors j'ai laissé tomber cette partie, d'où ce bloc de code dégueulasse dans le fichier source.
+chat.sh appelle ensuite sousdom, qui lit le fichier req et en extrait la première partie, celle qui vient avant le premier point (dans notre exemple, "ohyeah"). Ce programme en C est un vestige d'un autre projet très ancien et sa fonction pourrait être incluse directement dans le script. 
+Pour des raisons techniques, les messages sont transmis en base32. La partie extraite est donc décodée avec base32.
+Le programme ajoute la date et le préfixe "Avion : " au message, puis l'ajoute au bout d'un fichier (miaou.txt) directement dans le répertoire public du serveur apache.
+L'idée est que ce fichier texte sera récupéré par le serveur de réception pour être redistribué sous forme de DNS.
+Le programme se bloque pendant 35 secondes pour éviter de récupérer de nouvelles tentatives d'envoi du même message, puis reprend du début.
