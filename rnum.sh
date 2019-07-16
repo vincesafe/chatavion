@@ -21,7 +21,8 @@ suboff=1
 subs=""
 while [ $suboff -ge 0 ]
 do
-	dig $server m$offset.n$suboff.getmmsg.us.to | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' > tmpip
+	### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
+	dig $server m$offset.n$suboff.getmmsg.xx.yy | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' > tmpip
 	if [ `wc -l tmpip | cut -f 1 -d " "` -ge 3 ] && [ "$server" == "" ]
 	then # 3 IP addresses in the log + no server defined = 1st is content
 		read -r ipaddr < tmpip
