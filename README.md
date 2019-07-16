@@ -106,7 +106,7 @@ send.sh permet l'envoi de messages. Dans ce fichier, il convient de remplacer em
 Le réseau peut filtrer les requêtes DNS pour n'autoriser l'utilisation que d'un seul serveur, généralement celui fourni en DHCP. 
 Dans ce cas, une application comme Network Info 2 permet de récupérer l'adresse de ce serveur. Il faut la renseigner dans le fichier "dnserv", précédée d'un @, comme ceci :
 
-```echo "@1.2.3.4 > dnserv```
+```echo "@1.2.3.4" > dnserv```
 
 Le programme d'envoi s'utilise avec la commande suivante :
 
@@ -116,3 +116,21 @@ send.sh convertit le message en base32 et émet une requête vers (messageBase32
 Si tout se passe bien, cette requête est interceptée par SEND et le message est enregistré. 
 Comme expliqué plus haut, n'ayant jamais réussi à faire émettre une réponse correcte par rd2, il n'est pas possible d'avoir un retour immédiat du succès (ou non) de l'envoi. 
 Pour cela, il faut utiliser un programme de réception pour voir la conversation.
+Compte tenu de l'instabilité du système, éviter les caractères spéciaux augmente les chances de succès.
+
+Le programme du serveur SEND bloque pendant 35 secondes l'envoi de messages après réception d'une requête. Il faut donc patienter au moins ce temps avant d'envoyer un nouveau message.
+
+recep.sh émet tout simplement des requêtes DNS (m1.getmmsg.xx.yy, ...) de type TXT pour réceptionner les messages du log. Au préalable, il faut remplacer getmmsg.xx.yy dans ce fichier par le nom NS qui renvoit vers le serveur de réception.
+Il peut prendre 2 paramètres facultatifs : le serveur DNS à utiliser et l'offset. 
+Il est conseillé d'utiliser le même serveur DNS que pour l'envoi. 
+L'offset correspond à un numéro de ligne. On peut choisir de ne recevoir que les messages à partir du 5ème, par exemple. Cela évite de recharger les messages déjà lus, pratique si la discussion est longue et/ou le réseau lent. Exemple : 
+
+```./recep.sh 1.2.3.4 5```
+
+Lorsqu'il détecte qu'il n'y a plus de message à charger (échec de la requête DNS), le programme indique quel est l'offset suivant, pour s'économiser du temps lors de la prochaine réception.
+
+rnum.sh fait la même chose et fonctionne à peu près de la même manière, mais en récupérant les caractères 4 par 4 sous forme d'adresse IP. Il fait appel à ip2ascii.sh pour la conversion. La quantité de requêtes émises peut être très importante et le temps d'exécution conséquent. Les paramètres d'utilisation sont identiques. Exemple : 
+
+```./rnum.sh 1.2.3.4 5```
+
+La synchronisation du log de conversation (miaou.txt) se fait en fonction du cron (ou du script cron.sh) sur le serveur RECV. Il est normal d'avoir un délai d'une minute.
