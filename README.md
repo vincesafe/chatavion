@@ -48,7 +48,7 @@ Le programme "sousdom" doit être compilé sur le serveur SEND. Le fichier sourc
 Le programme "rd2" doit aussi être compilé sur le serveur SEND. Le fichier source est recvdns.c. Exemple :
 ```gcc -o rd2 recvdns.c```
 
-Une fois ces préparation effectuées, il n'y a plus qu'à lancer chat.sh en tâche de fond. Exemple :
+Une fois ces préparations effectuées, il n'y a plus qu'à lancer chat.sh en tâche de fond. Exemple :
 ```nohup bash chat.sh &```
 
 chat.sh appelle rd2, qui attend une requête DNS. Quand une requête du type "ohyeah.emgt.xx.yy" est interceptée, rd2 enregistre le nom demandé dans un fichier "req". rd2 devait initialement renvoyer une réponse, mais je n'ai jamais réussi à forger un datagramme correct, alors j'ai laissé tomber cette partie, d'où ce bloc de code dégueulasse dans le fichier source.
@@ -56,7 +56,7 @@ chat.sh appelle rd2, qui attend une requête DNS. Quand une requête du type "oh
 chat.sh appelle ensuite sousdom, qui lit le fichier req et en extrait la première partie, celle qui vient avant le premier point (dans notre exemple, "ohyeah"). Ce programme en C est un vestige d'un autre projet très ancien et sa fonction pourrait être incluse directement dans le script. 
 
 Pour des raisons techniques, les messages sont transmis en base32. La partie extraite est donc décodée avec base32.
-Le programme ajoute la date et le préfixe "Avion : " au message, puis l'ajoute au bout d'un fichier (miaou.txt) directement dans le répertoire public du serveur apache.
+Le programme ajoute la date et le préfixe "Avion : " au message, puis l'ajoute au bout d'un fichier (miaou.txt) directement dans le répertoire public du serveur apache. Ce préfixe permet de préciser que le message est émis depuis un réseau potentiellement instable, par opposition au préfixe "Terre" utilisé par un client web normal (non présent sur ce dépôt).
 
 L'idée est que ce fichier texte sera récupéré par le serveur de réception pour être redistribué sous forme de DNS.
 Le programme se bloque pendant 35 secondes pour éviter de récupérer de nouvelles tentatives d'envoi du même message, puis reprend du début.
@@ -72,7 +72,7 @@ Il ne doit pas être utilisé pour autre chose. Tous les fichiers téléchargés
 
 Le serveur RECV fonctionne selon un assemblage de plusieurs programmes, notamment le serveur DNS bind. Bind doit être installé avec sa configuration par défaut. Le fichier /etc/bind/named.conf.local doit être remplacé par le fichier named.conf.local présent sur ce dépôt. Il est nécessaire de remplacer getmmsg.xx.yy par le nom NS qui renvoit vers le serveur de réception.
 
-Les fichiers nécessaire au fonctionnement du RECV sont avionfile.vierge, ip.sh, dnavion.sh et cron.sh (facultatif si le serveur permet de définir des cron). avionfile.vierge doit être modifié en remplaçant getmmsg.xx.yy par le nom qui convient, comme pour named.conf.local. L'adresse IP 66.66.166.166 doit aussi être remplacée par celle du serveur de réception.
+Les fichiers nécessaires au fonctionnement du RECV sont avionfile.vierge, ip.sh, dnavion.sh et cron.sh (facultatif si le serveur permet de définir des cron). avionfile.vierge doit être modifié en remplaçant getmmsg.xx.yy par le nom qui convient, comme pour named.conf.local. L'adresse IP 66.66.166.166 doit aussi être remplacée par celle du serveur de réception.
 
 Dans dnavion.sh, même chose pour getmmsg.xx.yy et pour vsi.xx.yy, qui doit être remplacé par l'adresse du serveur d'envoi.
 
