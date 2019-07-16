@@ -19,14 +19,14 @@ Chatavion se décompose en 4 parties :
 
 Chacun des serveurs doit disposer d'une adresse IPv4 fixe. Il est nécessaire d'attribuer un nom de domaine à chacun de ces serveurs. Exemple au hasard :
 
-chatrecv.ca    66.66.166.166
-chatsend.ca    33.33.133.133
+```chatrecv.ca    66.66.166.166
+chatsend.ca    33.33.133.133```
 
 Ensuite, deux autres domaines doivent renvoyer les requêtes reçues à ces serveurs, qui tâcheront de les interpréter. 
 Pour cela, on définit des entrées de type NS. Exemple :
 
-getmmsg.xx.yy   NS   chatrecv.ca
-emgt.xx.yy      NS   chatsend.ca
+```getmmsg.xx.yy   NS   chatrecv.ca
+emgt.xx.yy      NS   chatsend.ca```
 
 2. Serveur d'envoi
 
