@@ -14,7 +14,7 @@ Il a été créé pour discuter depuis les réseaux Wi-Fi d'avion sans payer et 
 
 Chatavion se décompose en 4 parties : 
  - Un client, utilisable en ligne de commande sous Android, conçu pour fonctionner avec Termux
- - Un serveur d'envoi (SEND) qui nécessite bash, un compilateur (gcc), le programme base32, un serveur web (Apache) et un serveur DNS (bind)
+ - Un serveur d'envoi (SEND) qui nécessite bash, un compilateur (gcc), le programme base32 et un serveur web (Apache)
  - Un serveur de réception (RECV) qui nécessite bash, cron (facultatif) et un serveur DNS (bind)
  - Une partie configuration DNS, qui peut être déléguée à un fournisseur comme freedns.afraid.org 
  
@@ -98,7 +98,7 @@ Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverr
 
 4. Client
 
-Un client a été conçu pour Android, pour fonctionner avec l'émulateur de terminal Termux. Il est composé des fichiers send.sh, recep.sh, rnum.sh et ip2ascii.sh. Pour tout installer d'un coup, il est possible de télécharger et exécuter install.sh. Il est nécessaire de se placer dans un répertoire vide avec droits d'écriture. 
+Un client a été conçu pour Android, pour fonctionner avec l'émulateur de terminal Termux. Il est composé des fichiers send.sh, recep.sh, rnum.sh et ip2ascii.sh. Pour tout installer d'un coup, avec les paquets nécessaires, il est possible de télécharger et exécuter install.sh. Il est nécessaire de se placer dans un répertoire vide avec droits d'écriture. 
 
 ```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/install.sh```
 
