@@ -12,5 +12,6 @@ then
 fi
 
 msg=`echo "$1" | base32`
-dig $srv $msg.emgt.us.to > logdig.txt 2&>1
+### REPLACE emgt.xx.yy WITH THE DOMAIN USED TO SEND MESSAGES
+dig $srv $msg.emgt.xx.yy > logdig.txt 2&>1
 echo "Tentative d'envoi. Utilisez recep.sh ou rnum.sh pour vérifier."
