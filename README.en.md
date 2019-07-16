@@ -9,6 +9,8 @@ Chatavion is a messaging system working only over DNS.
 It may be used on almost every public Wi-Fi network, without authentication or payment. 
 It was made to chat on (expensive) airplane networks for free, and it did work!
 
+It was originally meant to be a proof of concept to send emergency messages in a plane. The design and the code are a shame - don't blame me, that's not my job! But well, it works. :) 
+
 Chatavion is made of 4 parts:
  - A command line interface for Android, designed to be used over the free app Termux
  - A SEND server that requires bash, a C compiler (gcc), the base32 command and a web server (Apache) 
