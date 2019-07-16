@@ -68,3 +68,80 @@ That miaou.txt log file will then be grabbed by the RECV server, which will incl
 The program is blocked for 35 seconds after it gets a message, to prevent future attemps for the same message to be written again. 
 Then, it starts over again.
 
+3. Reception server
+
+The RECV server has the address 66.66.166.166 and the domain chatrecv.ca. 
+It is the nameserver of the domain getmmsg.xx.yy. Thus, when someone asks for the domain "ohyeah.getmmsg.xx.yy" on the Internet, 
+the RECV server receives the request and processes it.
+
+Just like the SEND server, is a very unstable prototype, it may randomly crash the server. Do not use it for any other purpose. 
+Every file from this repository must be placed in the same directory with read-write rights. 
+Everything has to be executed under the root account. 
+
+The RECV server requires the DNS server bind with its default configuration. /etc/bind/named.conf.local must be replaced with the named.conf.local from this deposit. Replace getmmsg.xx.yy with your NS name that forwards requests toward the reception server.
+
+On that server, you will need the following files: avionfile.vierge, ip.sh, dnavion.sh and cron.sh (optional if your server allows cron). In avionfile.vierge, replace getmmsg.xx.yy the same way. Replace also 66.66.166.166 with the RECV server IP address. 
+
+In dnavion.sh, replace getmmsg.xx.yy just like before. vsi.xx.yy must be replaced with the SEND server address.
+
+In order to get the system working, bind must be started first. dnavion.sh must then be executed regularly, either with a cron (every minute) or using the cron.sh script as a background task, e.g.: 
+
+```nohup bash cron.sh &```
+
+dnavion.sh downloads miaou.txt (the conversation log) from the SEND server. All the double quotes are removed to avoid crashes, since messages will be copied in a configuration file.
+
+It copies an empty configuration template (avionfile.vierge). It is then filled with the log file according to the following pattern:
+ - mX is a text record (TXT type) containing the whole raw message on line X
+ - mX.nY is an IP address record (type A) containing 4 characters from message #X with #Y offset, converted in digital values according to the ASCII encoding (ip.sh does the conversion)
+  
+Thus, a TXT type DNS request on m1.getmmsg.xx.yy will get the first message from the conversation log, m2.getmmsg.xx.yy will get the second, and so on.
+
+Some networks allow TXT type requests, like SNCF's TGV Wi-Fi (French high speed trains), but some do not allow them, like ANA on-board Wi-Fi (a Japanese airline company). Yes, I did try. As an alternative, we can get messages in the form of numbers, with IP addresses. Thus, a A type (IP address) DNS request on m1.n1.getmmsg.xx.yy will get the 4 first characters of the first message. 
+m1.n2.getmmsg.xx.yy will get the 5th to 8th characters of the first message. 
+m2.n1.getmmsg.xx.yy will get the 4 first characters of the second message, and so on.
+
+4. Client
+
+A client for Android was made to work under the Termux app, a terminal emulator. It is composed on the following files: 
+send.sh, recep.sh, rnum.sh and ip2ascii.sh. 
+To install them all in a row, as well as necessary packages, you can download and execute install.sh: 
+
+```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/install.sh```
+
+```bash install.sh```
+
+Make sure to be in an empty directory with read-write access before using it.
+
+send.sh is used to send messages. In that file, replace emgt.xx.yy with the NS name that forwards requests to the SEND server.
+
+Your network may filter DNS requests and allow only the usage of the DNS server provided by DHCP. Use an app like Network Info 2 
+to get that server address, and write it in a "dnserv" file, e.g.:
+
+```echo "@1.2.3.4" > dnserv```
+
+To use the send program, use the following command: 
+
+```./send.sh "here is a message"```
+
+send.sh converts the message into base32 and makes a request to (base32message).emgt.xx.yy. 
+If everything works fine, that request reaches the SEND server and the message is decoded and logged. 
+As I said earlier, since I couldn't manage to make a proper DNS response, we can't have an immediate confirmation that the message 
+was recorded. We have to use a reception program. Provided the system unstability, avoiding special characters is better.
+
+The SEND server blocks new messages for 35 seconds after it receives a request. Thus, one has to wait before sending an other message.
+
+recep.sh simply makes TXT type DNS requests (m1.getmmsg.xx.yy, ...) to receive messages from the log. Before using it, replace getmmsg.xx.yy with the NS name that forwards requests to the RECV server.
+
+It takes 2 optional parameters: the DNS server to ask and an offset. I advise using the same DNS server as for the sending program. The offset is the line number from which messages shall be read. It avoids reloading former messages you've already got. 
+That is really useful when the log is big or when the network is slow. E.g.:
+
+```./recep.sh 1.2.3.4 5```
+
+That command asks the DNS server 1.2.3.4 to get messages from line #5. After all messages are read (when the program gets no more reply, or an error), the next offset is displayed to save time for the next time.
+
+rnum.sh does the same thing, but it gets 4 characters at a time since it asks for IP addresses. ip2ascii.sh does the conversion. 
+The amount of requests may be very important, and therefore, the execution time can be long. Usage is the same as recep.sh, e.g.:
+
+```./rnum.sh 1.2.3.4 5```
+
+The conversation log (miaou.txt) is synchronized every minute or more, according to the cron running on RECV. Remember there will be a delay between the time a message is send and the time it can be retrieved.
