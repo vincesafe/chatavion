@@ -1,4 +1,4 @@
-# chat.sh - twitter over dns version alpha 1
+# chat.sh - chatavion send server version alpha 1
 # Code under CC BY-NC-SA 3.0 license
 # By vincesafe - vincesafe.fr
 # twitter.com/vincesafe
