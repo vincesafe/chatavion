@@ -93,3 +93,26 @@ Les requêtes DNS de type TXT fonctionnent sur certains réseaux, comme le Wi-Fi
 Alternativement, il est possible de récupérer les messages sous forme de nombres, stockés dans des adresses IP. 
 Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverra les 4 premiers caractères du premier message. m1.n2.getmmsg.xx.yy renverra les caractères 5 à 8 du premier message. m2.n1.getmmsg.xx.yy, les 4 premiers du deuxième message, etc.
 
+4. Client
+
+Un client a été conçu pour Android, pour fonctionner avec l'émulateur de terminal Termux. Il est composé des fichiers send.sh, recep.sh, rnum.sh et ip2ascii.sh. Pour tout installer d'un coup, il est possible de télécharger et exécuter install.sh. Il est nécessaire de se placer dans un répertoire vide avec droits d'écriture. 
+
+```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/install.sh```
+
+```bash install.sh```
+
+send.sh permet l'envoi de messages. Dans ce fichier, il convient de remplacer emgt.xx.yy par le nom NS qui renvoit vers le serveur d'envoi.
+
+Le réseau peut filtrer les requêtes DNS pour n'autoriser l'utilisation que d'un seul serveur, généralement celui fourni en DHCP. 
+Dans ce cas, une application comme Network Info 2 permet de récupérer l'adresse de ce serveur. Il faut la renseigner dans le fichier "dnserv", précédée d'un @, comme ceci :
+
+```echo "@1.2.3.4 > dnserv```
+
+Le programme d'envoi s'utilise avec la commande suivante :
+
+```./send.sh "voici un message"```
+
+send.sh convertit le message en base32 et émet une requête vers (messageBase32).emgt.xx.yy. 
+Si tout se passe bien, cette requête est interceptée par SEND et le message est enregistré. 
+Comme expliqué plus haut, n'ayant jamais réussi à faire émettre une réponse correcte par rd2, il n'est pas possible d'avoir un retour immédiat du succès (ou non) de l'envoi. 
+Pour cela, il faut utiliser un programme de réception pour voir la conversation.
