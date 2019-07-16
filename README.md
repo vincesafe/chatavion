@@ -1,9 +1,12 @@
 # chatavion
-Messaging system over DNS
+Système de messagerie sur DNS - Messaging system over DNS
 
 ATTENTION ! CECI EST UN PROJET EXPÉRIMENTAL EXTRÊMEMENT INSTABLE. IL DOIT ÊTRE UTILISÉ UNIQUEMENT SUR MACHINE VIRTUELLE DÉDIÉE.
+LES CONTRIBUTIONS SONT LES BIENVENUES. 
 
-WARNING! THIS IS AN EXPERIMENTAL, HIGHLY UNSTABLE PROJECT. IT SHOULD BE USED ONLY ON A DEDICATED VIRTUAL MACHINE.
+WARNING! THIS IS AN EXPERIMENTAL, HIGHLY UNSTABLE PROJECT. IT SHOULD BE USED ONLY ON A DEDICATED VIRTUAL MACHINE. CONTRIBUTIONS ARE WELCOME.
+
+For more information in English, please see README.en.md
 
 Chatavion est un système de messagerie fonctionnant uniquement par DNS. 
 Il peut ainsi être utilisé sur tous les réseaux publics sans authentification ni paiement.
