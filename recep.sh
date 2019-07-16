@@ -17,7 +17,8 @@ echo "Offset $offset"
 
 while [ 1 -eq 1 ]
 do
-subs=`dig m$offset.getmmsg.us.to txt | grep \" | cut -d'"' -f 2`
+### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
+subs=`dig m$offset.getmmsg.xx.yy txt | grep \" | cut -d'"' -f 2`
 if [ "$subs" = "" ] # no result found
 then
 	echo "Next offset: $offset"
