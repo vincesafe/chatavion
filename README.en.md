@@ -78,7 +78,7 @@ The RECV server has the address 66.66.166.166 and the domain chatrecv.ca.
 It is the nameserver of the domain getmmsg.xx.yy. Thus, when someone asks for the domain "ohyeah.getmmsg.xx.yy" on the Internet, 
 the RECV server receives the request and processes it.
 
-Just like the SEND server, is a very unstable prototype, it may randomly crash the server. Do not use it for any other purpose. 
+Just like the SEND server, it is a very unstable prototype, it may randomly crash the server. Do not use it for any other purpose. 
 Every file from this repository must be placed in the same directory with read-write rights. 
 Everything has to be executed under the root account. 
 
