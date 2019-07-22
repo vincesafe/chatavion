@@ -20,6 +20,8 @@ Chatavion se décompose en 4 parties :
  - Un serveur de réception (RECV) qui nécessite bash, cron (facultatif) et un serveur DNS (bind)
  - Une partie configuration DNS, qui peut être déléguée à un fournisseur comme freedns.afraid.org 
  
+Ce fonctionnement est schématisé sur [ce forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/#p206189). 
+ 
 1. Configuration DNS préalable
 
 Chacun des serveurs doit disposer d'une adresse IPv4 fixe. Il est nécessaire d'attribuer un nom de domaine à chacun de ces serveurs. Exemple au hasard :
