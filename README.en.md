@@ -17,6 +17,8 @@ Chatavion is made of 4 parts:
  - A reception server (RECV) that requires bash, a DNS server (bind) and cron (optional)
  - A DNS configuration that can be delegated to a provider like freedns.afraid.org
  
+You can find diagrams to understand these parts on [this forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/#p206189) (in French). 
+ 
 1. DNS configuration
 
 Both servers (SEND and RECV) need a static IP address. A domain name must be associated to each server. Random example:
