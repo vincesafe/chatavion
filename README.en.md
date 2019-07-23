@@ -104,10 +104,12 @@ Some networks allow TXT type requests, like SNCF's TGV Wi-Fi (French high speed 
 m1.n2.getmmsg.xx.yy will get the 5th to 8th characters of the first message. 
 m2.n1.getmmsg.xx.yy will get the 4 first characters of the second message, and so on.
 
+With IPv6, we can store 16 characters, and then do 4 times less requests. I'm working on it.
+
 4. Client
 
 A client for Android was made to work under the Termux app, a terminal emulator. It is composed on the following files: 
-send.sh, recep.sh, rnum.sh and ip2ascii.sh. 
+send.sh, recepauto.sh, ip6ascii.sh and ip2ascii.sh. 
 To install them all in a row, as well as necessary packages, you can download and execute install.sh: 
 
 ```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/install.sh```
@@ -134,18 +136,15 @@ was recorded. We have to use a reception program. Provided the system unstabilit
 
 The SEND server blocks new messages for 35 seconds after it receives a request. Thus, one has to wait before sending an other message.
 
-recep.sh simply makes TXT type DNS requests (m1.getmmsg.xx.yy, ...) to receive messages from the log. Before using it, replace getmmsg.xx.yy with the NS name that forwards requests to the RECV server.
+recepauto.sh simply makes DNS requests (m1.getmmsg.xx.yy, ...) to receive messages from the log. Before using it, replace getmmsg.xx.yy with the NS name that forwards requests to the RECV server.
 
 It takes 2 optional parameters: the DNS server to ask and an offset. I advise using the same DNS server as for the sending program. The offset is the line number from which messages shall be read. It avoids reloading former messages you've already got. 
 That is really useful when the log is big or when the network is slow. E.g.:
 
-```./recep.sh 1.2.3.4 5```
+```./recepauto.sh 1.2.3.4 5```
 
 That command asks the DNS server 1.2.3.4 to get messages from line #5. After all messages are read (when the program gets no more reply, or an error), the next offset is displayed to save time for the next time.
 
-rnum.sh does the same thing, but it gets 4 characters at a time since it asks for IP addresses. ip2ascii.sh does the conversion. 
-The amount of requests may be very important, and therefore, the execution time can be long. Usage is the same as recep.sh, e.g.:
-
-```./rnum.sh 1.2.3.4 5```
+3 modes are tried, from the fastest to the slowest. The first is the text mode. TXT type DNS requests are sent and a whole message in included in the answer. That type of requests may be filtered by the Internet access provider. The second mode is IPv6. Chunks are asked until the whole message is received. Characters are stored in the form of a IPv6 address, which is 16 bytes long, so we can get 16 characters at most for each request. The third mode is very similar, but with IPv4. They are only 4 bytes long, so getting 4 characters from each request is long, but it is the least likely to be filtered.
 
 The conversation log (miaou.txt) is synchronized every minute or more, according to the cron running on RECV. Remember there will be a delay between the time a message is send and the time it can be retrieved.
