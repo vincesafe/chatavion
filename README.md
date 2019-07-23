@@ -100,9 +100,11 @@ Les requêtes DNS de type TXT fonctionnent sur certains réseaux, comme le Wi-Fi
 Alternativement, il est possible de récupérer les messages sous forme de nombres, stockés dans des adresses IP. 
 Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverra les 4 premiers caractères du premier message. m1.n2.getmmsg.xx.yy renverra les caractères 5 à 8 du premier message. m2.n1.getmmsg.xx.yy, les 4 premiers du deuxième message, etc.
 
+L'implémentation du codage sur adresse IPv6 est en cours. Elle nécessitera 4 fois moins de requêtes que sur IPv4.
+
 4. Client
 
-Un client a été conçu pour Android, pour fonctionner avec l'émulateur de terminal Termux. Il est composé des fichiers send.sh, recep.sh, rnum.sh et ip2ascii.sh. Pour tout installer d'un coup, avec les paquets nécessaires, il est possible de télécharger et exécuter install.sh. Il est nécessaire de se placer dans un répertoire vide avec droits d'écriture. 
+Un client a été conçu pour Android, pour fonctionner avec l'émulateur de terminal Termux. Il est composé des fichiers send.sh, recepauto.sh, ip2ascii.sh et ip6ascii.sh. Pour tout installer d'un coup, avec les paquets nécessaires, il est possible de télécharger et exécuter install.sh. Il est nécessaire de se placer dans un répertoire vide avec droits d'écriture. 
 
 ```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/install.sh```
 
@@ -120,24 +122,22 @@ Le programme d'envoi s'utilise avec la commande suivante :
 ```./send.sh "voici un message"```
 
 send.sh convertit le message en base32 et émet une requête vers (messageBase32).emgt.xx.yy. 
-Si tout se passe bien, cette requête est interceptée par SEND et le message est enregistré. 
+Si tout se passe bien, cette requête est interceptée par SEND et le message est enregistré. En cas d'échec du décodage base32, le message est ignoré. 
 Comme expliqué plus haut, n'ayant jamais réussi à faire émettre une réponse correcte par rd2, il n'est pas possible d'avoir un retour immédiat du succès (ou non) de l'envoi. 
 Pour cela, il faut utiliser un programme de réception pour voir la conversation.
 Compte tenu de l'instabilité du système, éviter les caractères spéciaux augmente les chances de succès.
 
-Le programme du serveur SEND bloque pendant 35 secondes l'envoi de messages après réception d'une requête. Il faut donc patienter au moins ce temps avant d'envoyer un nouveau message.
+Le programme du serveur SEND bloque pendant 35 secondes l'envoi de messages après réception d'une requête valide. Il faut donc patienter au moins ce temps avant d'envoyer un nouveau message.
 
-recep.sh émet tout simplement des requêtes DNS (m1.getmmsg.xx.yy, ...) de type TXT pour réceptionner les messages du log. Au préalable, il faut remplacer getmmsg.xx.yy dans ce fichier par le nom NS qui renvoit vers le serveur de réception.
+recepauto.sh émet tout simplement des requêtes DNS (m1.getmmsg.xx.yy, ...) pour réceptionner les messages du log. Au préalable, il faut remplacer getmmsg.xx.yy dans ce fichier par le nom NS qui renvoit vers le serveur de réception.
 Il peut prendre 2 paramètres facultatifs : le serveur DNS à utiliser et l'offset. 
 Il est conseillé d'utiliser le même serveur DNS que pour l'envoi. 
 L'offset correspond à un numéro de ligne. On peut choisir de ne recevoir que les messages à partir du 5ème, par exemple. Cela évite de recharger les messages déjà lus, pratique si la discussion est longue et/ou le réseau lent. Exemple : 
 
-```./recep.sh 1.2.3.4 5```
+```./recepauto.sh 1.2.3.4 5```
 
 Lorsqu'il détecte qu'il n'y a plus de message à charger (échec de la requête DNS), le programme indique quel est l'offset suivant, pour s'économiser du temps lors de la prochaine réception.
 
-rnum.sh fait la même chose et fonctionne à peu près de la même manière, mais en récupérant les caractères 4 par 4 sous forme d'adresse IP. Il fait appel à ip2ascii.sh pour la conversion. La quantité de requêtes émises peut être très importante et le temps d'exécution conséquent. Les paramètres d'utilisation sont identiques. Exemple : 
-
-```./rnum.sh 1.2.3.4 5```
+recepauto.sh teste 3 modes de réception différents par ordre de rapidité. Le premier est le mode texte : les messages sont directement transmis sous forme de texte dans la réponse DNS. Ce mode est filtré sur certains hotspots. En cas d'échec, un message d'erreur s'affiche. Le deuxième mode utilise des adresses IPv6. Elles sont 128 bits, soit 16 octets, on peut donc y caser 16 caractères ASCII. Ce mode utilise ip6ascii pour convertir une adresse IPv6 en chaine de caractères et l'afficher. Le troisième mode utilise des adresses IPv4. Elles ne font que 4 octets, les caractères doivent donc être transmis 4 par 4. C'est le mode le plus lent.
 
 La synchronisation du log de conversation (miaou.txt) se fait en fonction du cron (ou du script cron.sh) sur le serveur RECV. Il est normal d'avoir un délai d'une minute.
