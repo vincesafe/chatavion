@@ -10,6 +10,7 @@ pkg install nano
 wget https://raw.githubusercontent.com/vincesafe/chatavion/master/send.sh
 wget https://raw.githubusercontent.com/vincesafe/chatavion/master/recep.sh
 wget https://raw.githubusercontent.com/vincesafe/chatavion/master/ip2ascii.sh
+wget https://raw.githubusercontent.com/vincesafe/chatavion/master/ip6ascii.sh
 wget https://raw.githubusercontent.com/vincesafe/chatavion/master/rnum.sh
 
 chmod u+x *.sh
