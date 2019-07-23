@@ -11,10 +11,13 @@ do
 presd=`./sousdom`
 capsd=`echo ${presd^^}`
 sd=`echo $capsd | base32 --decode`
-echo "Statut : $sd"
-date=`date +%H:%M\ %d/%m/%Y`
-echo "$date Avion : $sd" >> /var/www/html/miaou.txt
-echo "Enregistré dans la conversation"
-echo "Délai de 35 secondes..."
-sleep 35
+if [ $? -eq 0 ] && [ "$sd" != "" ]
+then # no base32 input error
+  echo "Statut : $sd"
+  date=`date +%H:%M\ %d/%m/%Y`
+  echo "$date Avion : $sd" >> /var/www/html/miaou.txt
+  echo "Enregistré dans la conversation"
+  echo "Délai de 35 secondes..."
+  sleep 35
+fi
 done
