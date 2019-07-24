@@ -84,9 +84,9 @@ Everything has to be executed under the root account.
 
 The RECV server requires the DNS server bind with its default configuration. /etc/bind/named.conf.local must be replaced with the named.conf.local from this deposit. Replace getmmsg.xx.yy with your NS name that forwards requests toward the reception server.
 
-On that server, you will need the following files: avionfile.vierge, ip.sh, dnavion.sh and cron.sh (optional if your server allows cron). In avionfile.vierge, replace getmmsg.xx.yy the same way. Replace also 66.66.166.166 with the RECV server IP address. 
+On that server, you will need the following files: avionfile.vierge, ip.sh, ip6.sh, dnavion.sh and cron.sh (optional if your server allows cron). In avionfile.vierge, replace getmmsg.xx.yy the same way. Replace also 66.66.166.166 with the RECV server IP address. 
 
-In dnavion.sh, replace getmmsg.xx.yy just like before. vsi.xx.yy must be replaced with the SEND server address.
+In dnavion.sh, replace getmmsg.xx.yy just like before. chatsend.ca must be replaced with the SEND server address.
 
 In order to get the system working, bind must be started first. dnavion.sh must then be executed regularly, either with a cron (every minute) or using the cron.sh script as a background task, e.g.: 
 
@@ -97,14 +97,14 @@ dnavion.sh downloads miaou.txt (the conversation log) from the SEND server. All 
 It copies an empty configuration template (avionfile.vierge). It is then filled with the log file according to the following pattern:
  - mX is a text record (TXT type) containing the whole raw message on line X
  - mX.nY is an IP address record (type A) containing 4 characters from message #X with #Y offset, converted in digital values according to the ASCII encoding (ip.sh does the conversion)
+  - mX.oY is an IPv6 address record (type AAAA) containing 16 characters from message #X with #Y offset, converted in hexadecimal values according to the ASCII encoding (ip6.sh does the conversion)
   
 Thus, a TXT type DNS request on m1.getmmsg.xx.yy will get the first message from the conversation log, m2.getmmsg.xx.yy will get the second, and so on.
 
-Some networks allow TXT type requests, like SNCF's TGV Wi-Fi (French high speed trains), but some do not allow them, like ANA on-board Wi-Fi (a Japanese airline company). Yes, I did try. As an alternative, we can get messages in the form of numbers, with IP addresses. Thus, a A type (IP address) DNS request on m1.n1.getmmsg.xx.yy will get the 4 first characters of the first message. 
+Some networks allow TXT type requests, like SNCF's TGV Wi-Fi (French high speed trains), but some do not allow them, like ANA on-board Wi-Fi (a Japanese airline company). Yes, I actually tried. As an alternative, we can get messages in the form of numbers, with IP addresses. Thus, a A type (IP address) DNS request on m1.n1.getmmsg.xx.yy will get the 4 first characters of the first message. 
 m1.n2.getmmsg.xx.yy will get the 5th to 8th characters of the first message. 
-m2.n1.getmmsg.xx.yy will get the 4 first characters of the second message, and so on.
-
-With IPv6, we can store 16 characters, and then do 4 times less requests. I'm working on it.
+m2.n1.getmmsg.xx.yy will get the 4 first characters of the second message, and so on. 
+The same way, a AAAA type (IPv6 address) on m1.o1.getmmsg.us.to will get the 16 first characters of the first message.
 
 4. Client
 
@@ -132,7 +132,7 @@ To use the send program, use the following command:
 send.sh converts the message into base32 and makes a request to (base32message).emgt.xx.yy. 
 If everything works fine, that request reaches the SEND server and the message is decoded and logged. 
 As I said earlier, since I couldn't manage to make a proper DNS response, we can't have an immediate confirmation that the message 
-was recorded. We have to use a reception program. Provided the system unstability, avoiding special characters is better.
+was recorded. I'm currently working on a future version of SEND programs, using Node.js, that will allow an immediate reply. Until then, we have to use a reception program. Provided the system unstability, avoiding special characters is better.
 
 The SEND server blocks new messages for 35 seconds after it receives a request. Thus, one has to wait before sending an other message.
 
