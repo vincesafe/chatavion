@@ -1,5 +1,8 @@
 #!/bin/bash
 
+### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
+RECV="getmmsg.xx.yy"
+
 server=
 offset=1
 
@@ -17,12 +20,12 @@ echo "Offset $offset"
 
 # Tries TXT first (mode 0), then AAAA (mode 1 to be implemented), then A (mode 2)
 mode=0
-subs=`dig $server m1.getmmsg.xx.yy txt | grep \" | cut -d'"' -f 2`
+subs=`dig $server m1.$RECV txt | grep \" | cut -d'"' -f 2`
 if [ "$subs" = "" ] # no result found
 then
   echo "TXT request failed, trying AAAA request..."
   mode=1
-  subs=`dig $server m1.o1.getmmsg.xx.yy aaaa | grep AAAA | grep ':' | cut -f6`
+  subs=`dig $server m1.o1.$RECV aaaa | grep AAAA | grep ':' | cut -f5`
   if [ "$subs" = "" ] # no result found for IPv6
   then
     echo "AAAA request failed, trying A request..."
@@ -35,8 +38,7 @@ then
 
   while [ 1 -eq 1 ]
   do
-  ### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
-  subs=`dig $server m$offset.getmmsg.xx.yy txt | grep \" | cut -d'"' -f 2`
+  subs=`dig $server m$offset.$RECV txt | grep \" | cut -d'"' -f 2`
   if [ "$subs" = "" ] # no result found
   then
         echo "Next offset: $offset"
@@ -55,12 +57,11 @@ then
         subs=""
         while [ $suboff -ge 0 ]
         do
-                ### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
-                ipaddr=`dig $server m$offset.o$suboff.getmmsg.xx.yy aaaa | grep AAAA | grep ':' | cut -f6`
+                ipaddr=`dig $server m$offset.o$suboff.$RECV aaaa | grep AAAA | grep ':' | cut -f5`
                 if [ "$ipaddr" != "" ]
                 then # IPv6 found
                         chars="`./ip6ascii.sh $ipaddr`"
-                        subs=$subs$chars
+                        subs="$subs$chars"
                         suboff=$((suboff+1))
                 else #failure: end of message of end of file
                         suboff=-1
@@ -83,8 +84,7 @@ then
         subs=""
         while [ $suboff -ge 0 ]
         do
-                ### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
-                dig $server m$offset.n$suboff.getmmsg.xx.yy | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' > tmpip
+                dig $server m$offset.n$suboff.$RECV | grep -o '[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}\.[0-9]\{1,3\}' > tmpip
                 if [ `wc -l tmpip | cut -f 1 -d " "` -ge 3 ] && [ "$server" == "" ]
                 then # 3 IP addresses in the log + no server defined = 1st is content
                         read -r ipaddr < tmpip
@@ -98,8 +98,8 @@ then
                                 if [ "$ipaddr" != "$1" ]
                                 then # IP different from server is content
                                         chars="`./ip2ascii.sh $ipaddr`"
-                                                        subs=$subs$chars
-                                                        suboff=$((suboff+1))
+                                        subs=$subs$chars
+                                        suboff=$((suboff+1))
                                 fi
                         done < tmpip
                 else #failure: end of message of end of file
