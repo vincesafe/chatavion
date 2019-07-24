@@ -24,8 +24,9 @@ do
         then
                 c2=32
         fi
-        echo -n `chr $c1`
-        echo -n `chr $c2`
+        echo -n "`chr $c1`"
+        echo -n "`chr $c2`"
         fi
         block=$((block+1))
 done
+
