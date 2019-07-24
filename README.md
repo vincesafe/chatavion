@@ -79,9 +79,9 @@ Il ne doit pas être utilisé pour autre chose. Tous les fichiers téléchargés
 
 Le serveur RECV fonctionne selon un assemblage de plusieurs programmes, notamment le serveur DNS bind. Bind doit être installé avec sa configuration par défaut. Le fichier /etc/bind/named.conf.local doit être remplacé par le fichier named.conf.local présent sur ce dépôt. Il est nécessaire de remplacer getmmsg.xx.yy par le nom NS qui renvoit vers le serveur de réception.
 
-Les fichiers nécessaires au fonctionnement du RECV sont avionfile.vierge, ip.sh, dnavion.sh et cron.sh (facultatif si le serveur permet de définir des cron). avionfile.vierge doit être modifié en remplaçant getmmsg.xx.yy par le nom qui convient, comme pour named.conf.local. L'adresse IP 66.66.166.166 doit aussi être remplacée par celle du serveur de réception.
+Les fichiers nécessaires au fonctionnement du RECV sont avionfile.vierge, ip.sh, ip6.sh, dnavion.sh et cron.sh (facultatif si le serveur permet de définir des cron). avionfile.vierge doit être modifié en remplaçant getmmsg.xx.yy par le nom qui convient, comme pour named.conf.local. L'adresse IP 66.66.166.166 doit aussi être remplacée par celle du serveur de réception.
 
-Dans dnavion.sh, même chose pour getmmsg.xx.yy et pour vsi.xx.yy, qui doit être remplacé par l'adresse du serveur d'envoi.
+Dans dnavion.sh, même chose pour getmmsg.xx.yy et pour chatsend.ca, qui doit être remplacé par l'adresse du serveur d'envoi.
 
 Pour faire fonctionner le serveur, bind doit d'abord être démarré, et dnavion.sh doit être lancé à intervalles réguliers, 
 soit en programmant un cron qui le lance toutes les minutes par exemple, soit en lançant cron.sh en tâche de fond. Exemple :
@@ -93,14 +93,13 @@ dnavion.sh récupère miaou.txt (le log de conversation) depuis le serveur SEND.
 Il réalise une copie d'un template vierge (avionfile.vierge). Ce fichier de configuration est rempli avec les messages du log selon le pattern suivant :
  - mX est un enregistrement de type texte (TXT) qui contient le message brut contenu à la ligne X
  - mX.nY est un enregistrement de type adresse IP (A) qui contient 4 caractères du message X avec l'offset Y transformés en valeurs numériques selon l'encodage ASCII (cette transformation est opérée par ip.sh)
+ - mX.oY est un enregistrement de type adresse IPv6 (AAAA) qui contient 16 caractères du message X avec l'offset Y transformés en valeurs hexadécimales selon l'encodage ASCII (cette transformation est opérée par ip6.sh)
  
 Ainsi, une requête DNS de type TXT sur m1.getmmsg.xx.yy renverra le premier message du log de conversation, m2.getmmsg.xx.yy, le deuxième, etc.
 
 Les requêtes DNS de type TXT fonctionnent sur certains réseaux, comme le Wi-Fi du TGV, mais pas sur d'autres, comme le Wi-Fi de la compagnie aérienne ANA (c'est du vécu). 
 Alternativement, il est possible de récupérer les messages sous forme de nombres, stockés dans des adresses IP. 
-Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverra les 4 premiers caractères du premier message. m1.n2.getmmsg.xx.yy renverra les caractères 5 à 8 du premier message. m2.n1.getmmsg.xx.yy, les 4 premiers du deuxième message, etc.
-
-L'implémentation du codage sur adresse IPv6 est en cours. Elle nécessitera 4 fois moins de requêtes que sur IPv4.
+Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverra les 4 premiers caractères du premier message. m1.n2.getmmsg.xx.yy renverra les caractères 5 à 8 du premier message. m2.n1.getmmsg.xx.yy, les 4 premiers du deuxième message, etc. Selon le même principe, une requête DNS de type AAAA (adresse IPv6) sur m1.o1.getmmsg.xx.yy renverra les 16 premiers caractères du premier message.
 
 4. Client
 
@@ -123,8 +122,8 @@ Le programme d'envoi s'utilise avec la commande suivante :
 
 send.sh convertit le message en base32 et émet une requête vers (messageBase32).emgt.xx.yy. 
 Si tout se passe bien, cette requête est interceptée par SEND et le message est enregistré. En cas d'échec du décodage base32, le message est ignoré. 
-Comme expliqué plus haut, n'ayant jamais réussi à faire émettre une réponse correcte par rd2, il n'est pas possible d'avoir un retour immédiat du succès (ou non) de l'envoi. 
-Pour cela, il faut utiliser un programme de réception pour voir la conversation.
+Comme expliqué plus haut, n'ayant jamais réussi à faire émettre une réponse correcte par rd2, il n'est pas possible d'avoir un retour immédiat du succès (ou non) de l'envoi. Une prochaine version, utilisant Node.js sur SEND, permettra de savoir si le message a été reçu.
+Pour le moment, il faut utiliser un programme de réception pour voir la conversation.
 Compte tenu de l'instabilité du système, éviter les caractères spéciaux augmente les chances de succès.
 
 Le programme du serveur SEND bloque pendant 35 secondes l'envoi de messages après réception d'une requête valide. Il faut donc patienter au moins ce temps avant d'envoyer un nouveau message.
