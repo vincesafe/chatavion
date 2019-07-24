@@ -105,7 +105,7 @@ Ainsi, une requête DNS de type A (adresse IPv4) sur m1.n1.getmmsg.xx.yy renverr
 
 Un client a été conçu pour Android, pour fonctionner avec l'émulateur de terminal Termux. Il est composé des fichiers send.sh, recepauto.sh, ip2ascii.sh et ip6ascii.sh. Pour tout installer d'un coup, avec les paquets nécessaires, il est possible de télécharger et exécuter install.sh. Il est nécessaire de se placer dans un répertoire vide avec droits d'écriture. 
 
-```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/install.sh```
+```wget https://raw.githubusercontent.com/vincesafe/chatavion/master/client/install.sh```
 
 ```bash install.sh```
 
