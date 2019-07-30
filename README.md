@@ -16,7 +16,7 @@ Conçu initialement comme une preuve de concept d'envoi de message d'urgence en 
 
 Chatavion se décompose en 4 parties : 
  - Un client, utilisable en ligne de commande sous Android, conçu pour fonctionner avec Termux
- - Un serveur d'envoi (SEND) qui nécessite bash, un compilateur (gcc), le programme base32 et un serveur web (Apache)
+ - Un serveur d'envoi (SEND) qui nécessite bash, le programme base32 et Node.js avec le paquet node-named
  - Un serveur de réception (RECV) qui nécessite bash, cron (facultatif) et un serveur DNS (bind)
  - Une partie configuration DNS, qui peut être déléguée à un fournisseur comme freedns.afraid.org 
  
@@ -43,30 +43,22 @@ Le serveur d'envoi est celui qui a l'adresse 33.33.133.133 et le nom de domaine 
 Il est le nameserver du domaine emgt.xx.yy. 
 Ainsi, lorsqu'une requête DNS demandant "ohyeah.emgt.xx.yy" est émise sur Internet, le serveur d'envoi la reçoit et l'interprète. 
 
-Le système fonctionne avec un assemblage de plusieurs programmes. Il nécessite notamment apache et base32.
+Le système fonctionne avec un assemblage de plusieurs programmes. Il nécessite notamment Node.js et base32.
 
-Chatavion étant un prototype extrêmement instable, le serveur utilisé peut planter sans prévenir. 
+Chatavion étant un prototype instable, le serveur utilisé peut planter sans prévenir. 
 Il ne doit pas être utilisé pour autre chose. Tous les fichiers téléchargés depuis ce dépôt doivent être placés dans un même répertoire avec autorisation d'écriture. Toutes les commandes doivent être lancées en root.
-On considère que le répertoire racine pour apache est /var/www/html/.
 
-Le programme "sousdom" doit être compilé sur le serveur SEND. Le fichier source est sousdom.c. Exemple :
-```gcc -o sousdom sousdom.c```
+Node.js doit être installé sur ce serveur. La dépendance node-named peut être installée avec la commande suivante, dans le même répertoire que chatsend.js :
+```npm install node-named```
 
-Le programme "rd2" doit aussi être compilé sur le serveur SEND. Le fichier source est recvdns.c. Exemple :
-```gcc -o rd2 recvdns.c```
+Une fois ces préparations effectuées, il n'y a plus qu'à lancer chatsend.js en tâche de fond. Exemple :
+```nohup nodejs chatsend.js &```
 
-Une fois ces préparations effectuées, il n'y a plus qu'à lancer chat.sh en tâche de fond. Exemple :
-```nohup bash chat.sh &```
+chatsend.js démarre un serveur web sur le port 80 ainsi qu'un serveur DNS sur le port 53. Ces deux parties s'exécutent indépendamment l'une de l'autre. Toute requête sur le serveur web renvoie le log de conversation (miaou.txt).
 
-chat.sh appelle rd2, qui attend une requête DNS. Quand une requête du type "ohyeah.emgt.xx.yy" est interceptée, rd2 enregistre le nom demandé dans un fichier "req". rd2 devait initialement renvoyer une réponse, mais je n'ai jamais réussi à forger un datagramme correct, alors j'ai laissé tomber cette partie, d'où ce bloc de code dégueulasse dans le fichier source.
+Les requêtes DNS sont interceptées et décodées. La première partie est extraite puis décodée avec base32. En cas d'échec, le traitement est annulé. Le message est enregistré dans le log, précédé de l'expression "Avion : ". Ce préfixe permet de préciser que le message est émis depuis un réseau potentiellement instable, par opposition au préfixe "Terre" utilisé par un client web normal (non présent sur ce dépôt). Une réponse DNS (42.42.42.42) est envoyée pour indiquer que la requête a bien été reçue, indépendamment du fait que le message a été traité ou non, et ce pour éviter la multiplication des requêtes. Si plusieurs requêtes identiques sont reçues consécutivement, seule la première est prise en compte pour éviter les doublons dans la conversation.
 
-chat.sh appelle ensuite sousdom, qui lit le fichier req et en extrait la première partie, celle qui vient avant le premier point (dans notre exemple, "ohyeah"). Ce programme en C est un vestige d'un autre projet très ancien et sa fonction pourrait être incluse directement dans le script. 
-
-Pour des raisons techniques, les messages sont transmis en base32. La partie extraite est donc décodée avec base32.
-Le programme ajoute la date et le préfixe "Avion : " au message, puis l'ajoute au bout d'un fichier (miaou.txt) directement dans le répertoire public du serveur apache. Ce préfixe permet de préciser que le message est émis depuis un réseau potentiellement instable, par opposition au préfixe "Terre" utilisé par un client web normal (non présent sur ce dépôt).
-
-L'idée est que ce fichier texte sera récupéré par le serveur de réception pour être redistribué sous forme de DNS.
-Le programme se bloque pendant 35 secondes pour éviter de récupérer de nouvelles tentatives d'envoi du même message, puis reprend du début.
+Le fichier texte miaou.txt sera récupéré par le serveur de réception pour être redistribué sous forme de DNS.
 
 3. Serveur de réception
 
@@ -122,11 +114,8 @@ Le programme d'envoi s'utilise avec la commande suivante :
 
 send.sh convertit le message en base32 et émet une requête vers (messageBase32).emgt.xx.yy. 
 Si tout se passe bien, cette requête est interceptée par SEND et le message est enregistré. En cas d'échec du décodage base32, le message est ignoré. 
-Comme expliqué plus haut, n'ayant jamais réussi à faire émettre une réponse correcte par rd2, il n'est pas possible d'avoir un retour immédiat du succès (ou non) de l'envoi. Une prochaine version, utilisant Node.js sur SEND, permettra de savoir si le message a été reçu.
-Pour le moment, il faut utiliser un programme de réception pour voir la conversation.
+La bonne réception du message par le serveur renvoie la réponse 42.42.42.42, mais cela ne signifie pas forcément que le message a été enregistré. Par exemple, il n'est pas possible d'envoyer consécutivement plusieurs fois le même message.
 Compte tenu de l'instabilité du système, éviter les caractères spéciaux augmente les chances de succès.
-
-Le programme du serveur SEND bloque pendant 35 secondes l'envoi de messages après réception d'une requête valide. Il faut donc patienter au moins ce temps avant d'envoyer un nouveau message.
 
 recepauto.sh émet tout simplement des requêtes DNS (m1.getmmsg.xx.yy, ...) pour réceptionner les messages du log. Au préalable, il faut remplacer getmmsg.xx.yy dans ce fichier par le nom NS qui renvoit vers le serveur de réception.
 Il peut prendre 2 paramètres facultatifs : le serveur DNS à utiliser et l'offset. 
