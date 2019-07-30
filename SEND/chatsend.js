@@ -52,7 +52,8 @@ server.on('query', function(query) {
         decodedom = `${stdout}`;
         console.log("Message: " + decodedom);
         // date to be implemented
-        fs.appendFileSync("./miaou.txt", "Avion : " + decodedom, function(err) {
+	var curDate = new Date(Date.now());
+        fs.appendFileSync("./miaou.txt", curDate.toLocaleString() + " Avion : " + decodedom, function(err) {
           if(err) {
               return console.log(err);
           }
