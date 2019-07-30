@@ -13,7 +13,7 @@ It was originally meant to be a proof of concept to send emergency messages in a
 
 Chatavion is made of 4 parts:
  - A command line interface for Android, designed to be used over the free app Termux
- - A SEND server that requires bash, a C compiler (gcc), the base32 command and a web server (Apache) 
+ - A SEND server that requires bash, the base32 command and Node.js with node-named
  - A reception server (RECV) that requires bash, a DNS server (bind) and cron (optional)
  - A DNS configuration that can be delegated to a provider like freedns.afraid.org
  
@@ -40,37 +40,24 @@ The SEND server has the address 33.33.133.133 and the domain chatsend.ca.
 It is the nameserver of the domain emgt.xx.yy. Thus, when someone asks for the domain "ohyeah.emgt.xx.yy" on the Internet, 
 the SEND server receives the request and processes it.
 
-The system is a patchwork of several programs. It requires apache and base32.
+The system requires Node.js, with the node-named package, and base32.
 
-Chatavion is a very unstable prototype, it may randomly crash the server. Do not use it for any other purpose. 
+Chatavion is still an unstable prototype, it may crash the server. Do not use it for any other purpose. 
 Every file from this repository must be placed in the same directory with read-write rights. 
-Everything has to be executed under the root account. We will consider /var/www/html/ as the apache directory for web files.
+Everything has to be executed under the root account.
 
-"sousdom" program must be built on the SEND server with the source file sousdom.c. E.g.:
-```gcc -o sousdom sousdom.c```
+Install the node-named package with the following command:
+```npm install node-named```
 
-"rd2" program must also be built on the SEND server, with the source file recvdns.c. E.g.:
-```gcc -o rd2 recvdns.c```
+Once done, just start chatsend.js as a backgound task. E.g.:
+```nohup nodejs chatsend.sh &```
 
-Once done, just start chat.sh as a backgound task. E.g.:
-```nohup bash chat.sh &```
+chatsend.js starts a web server, listening on TCP port 80, and a DNS server, listening on UDP port 53. Both run independantly. Every HTTP request sends back the conversation log miaou.txt.
 
-chat.sh calls rd2, which waits for a DNS request. 
-When it receives a request like "ohyeah.emgt.xx.yy", rd2 writes that name in a "req" file.
-Initially, rd2 was supposed to send a reply, but I never managed to generate an appropriate datagram, so I gave it up.
-That's why there is a crappy block of code in the source file.
-
-Then, chat.sh calls sousdom, which reads the "req" file and extracts the first part, before the first dot ("ohyeah" in the example).
-That C program is from a very old project of mine, its function could be directly included in the script.
-
-For technical reasons, messages are transmitted encoded in base32. The extracted part is decoded with the base32 command. 
-The program adds the date and the "Avion : " prefix before the message, and appends it to a file ("miaou.txt") located in Apache 
-public directory. The "Avion" ("plane") part means this message comes from a likely unstable network (supposedly, a plane), 
-in opposition to the "Terre" ("Ground") prefix used in a regular web client (not in this deposit).
+DNS requests are caught and processed. The first part, before the first dot, in extracted and base32 decoded. If that fails, the request is not processed any further. The message is logged into the miaou.txt log file, with the "Avion : " ("plane") prefix. This part means this message comes from a likely unstable network (supposedly, a plane), 
+in opposition to the "Terre" ("Ground") prefix used in a regular web client (not in this deposit). A DNS reply (42.42.42.42) is sent to inform that the request was received, even if no message was recorded, to avoid multiple retries. If 2 or more identical requests are received, only the first one is processed, in order to avoid duplicates in the conversation log.
 
 That miaou.txt log file will then be grabbed by the RECV server, which will include its contents into the DNS server.
-The program is blocked for 35 seconds after it gets a message, to prevent future attemps for the same message to be written again. 
-Then, it starts over again.
 
 3. Reception server
 
@@ -131,10 +118,9 @@ To use the send program, use the following command:
 
 send.sh converts the message into base32 and makes a request to (base32message).emgt.xx.yy. 
 If everything works fine, that request reaches the SEND server and the message is decoded and logged. 
-As I said earlier, since I couldn't manage to make a proper DNS response, we can't have an immediate confirmation that the message 
-was recorded. I'm currently working on a future version of SEND programs, using Node.js, that will allow an immediate reply. Until then, we have to use a reception program. Provided the system unstability, avoiding special characters is better.
+If the 42.42.42.42 reply is received from SEND, the program indicated that the message was received. However, it does not mean it was actually processed. For instance, sending consecutively the same message will not work.
 
-The SEND server blocks new messages for 35 seconds after it receives a request. Thus, one has to wait before sending an other message.
+Provided the system unstability, avoiding special characters is better.
 
 recepauto.sh simply makes DNS requests (m1.getmmsg.xx.yy, ...) to receive messages from the log. Before using it, replace getmmsg.xx.yy with the NS name that forwards requests to the RECV server.
 
