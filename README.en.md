@@ -91,7 +91,7 @@ Thus, a TXT type DNS request on m1.getmmsg.xx.yy will get the first message from
 Some networks allow TXT type requests, like SNCF's TGV Wi-Fi (French high speed trains), but some do not allow them, like ANA on-board Wi-Fi (a Japanese airline company). Yes, I actually tried. As an alternative, we can get messages in the form of numbers, with IP addresses. Thus, a A type (IP address) DNS request on m1.n1.getmmsg.xx.yy will get the 4 first characters of the first message. 
 m1.n2.getmmsg.xx.yy will get the 5th to 8th characters of the first message. 
 m2.n1.getmmsg.xx.yy will get the 4 first characters of the second message, and so on. 
-The same way, a AAAA type (IPv6 address) on m1.o1.getmmsg.us.to will get the 16 first characters of the first message.
+The same way, a AAAA type (IPv6 address) on m1.o1.getmmsg.xx.yy will get the 16 first characters of the first message.
 
 4. Client
 
