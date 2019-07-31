@@ -16,7 +16,7 @@ Chatavion is made of 3 parts:
  - A server that requires bash, the base32 command and Node.js with node-named
  - A DNS configuration that can be delegated to a provider like freedns.afraid.org
  
-You can find diagrams to understand these parts on [this forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/#p206189) (in French). 
+You can find diagrams to understand these parts on [this forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/?page=2#p206584) (in French). 
  
 1. DNS configuration
 
