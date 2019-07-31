@@ -7,10 +7,10 @@ pkg install dnsutils
 pkg install coreutils
 pkg install nano
 
-wget https://raw.githubusercontent.com/vincesafe/chatavion/master/client/send.sh
-wget https://raw.githubusercontent.com/vincesafe/chatavion/master/client/recepauto.sh
-wget https://raw.githubusercontent.com/vincesafe/chatavion/master/client/ip2ascii.sh
-wget https://raw.githubusercontent.com/vincesafe/chatavion/master/client/ip6ascii.sh
+wget https://raw.githubusercontent.com/vincesafe/chatavion/mono/client/send.sh
+wget https://raw.githubusercontent.com/vincesafe/chatavion/mono/client/newrecep.sh
+wget https://raw.githubusercontent.com/vincesafe/chatavion/mono/client/ip2ascii.sh
+wget https://raw.githubusercontent.com/vincesafe/chatavion/mono/client/ip6ascii.sh
 
 chmod u+x *.sh
 
