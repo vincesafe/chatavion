@@ -19,7 +19,7 @@ Chatavion, dans sa version mono, se décompose en 3 parties :
  - Un serveur d'envoi (SEND) qui nécessite bash, le programme base32 et Node.js avec le paquet node-named
  - Une partie configuration DNS, qui peut être déléguée à un fournisseur comme freedns.afraid.org 
  
-Ce fonctionnement est schématisé sur [ce forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/#p206189). 
+Ce fonctionnement est schématisé sur [ce forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/?page=2#p206584). 
  
 1. Configuration DNS préalable
 
