@@ -1,9 +1,0 @@
-### PUT THIS FILE IN BIND CONFIGURATION DIRECTORY, e.g. /etc/bind/
-### MAKE SURE THIS FILE IS INCLUDED IN named.conf
-### REPLACE getmmsg.xx.yy WITH THE DOMAIN USED TO RETRIEVE MESSAGES
-
-zone "getmmsg.xx.yy" {
-	type master;
-	file "/etc/bind/getmmsg.xx.yy";
-	notify no;
-};
