@@ -36,7 +36,9 @@ casend.xx.yy      NS   chatavion.ca
 
 2. Serveur
 
-Le serveur fonctionne avec NodeJS et les dépendances hi-base32 et node-named. Pour les installer, utilisez la commande suivante dans le même répertoire que caserv.js : ```npm install hi-base32 node-named```. Modifiez le fichier pour faire correspondre les noms de domaine à votre configuration. Vous pouvez ensuite lancer le serveur en tâche de fond. Si vous utilisez Linux, vous pouvez exécuter ```nohup node caserv.js &```
+Le serveur fonctionne avec NodeJS et les dépendances hi-base32 et node-named. Pour les installer, utilisez la commande suivante dans le même répertoire que caserv.js : ```npm install hi-base32 node-named```. ATTENTION ! Le paquet node-named contient un bug qui peut empêcher l'exécution du programme. Pour le corriger, modifiez le fichier node_modules/node-named/lib/server.js. À la ligne 53, remplacez le code par ```this._socket = dgram.createSocket('udp4');```.
+
+Modifiez le fichier caserv.js pour faire correspondre les noms de domaine à votre configuration. Vous pouvez ensuite lancer le serveur en tâche de fond. Si vous utilisez Linux, vous pouvez exécuter ```nohup node caserv.js &```
 
 Le programme intercepte les requêtes DNS qu'il reçoit. S'il détecte une requête qui contient le nom de domaine d'envoi (casend.xx.yy dans notre exemple), il tente de décoder la première partie de la requête en base32 et enregistre le message dans un fichier de conversation (miaou.txt par défaut). S'il détecte dans une requête le nom de domaine de réception (carecv.xx.yy dans l'exemple), il renvoie un extrait de la conversation correspondant à la demande. 3 cas sont possibles : 
 
@@ -50,7 +52,7 @@ Un client a été conçu pour Android, pour fonctionner avec l'émulateur de ter
 
 ```npm install readline-sync hi-base32```
 
-Lors du lancement, le client détecte le serveur DNS par défaut. Vous pouvez simplement taper Entrée pour ne pas le modifier. ATTENTION : cela ne fonctionne pas sous Termux, qui propose 8.8.8.8 par défaut. Il est fortement recommandé de récupérer le serveur DNS renvoyé par le fournisseur d'accès, grâce à une appli comme Network Info II.
+Le client Chatavion peut maintenant être lancé avec la commande ```node caclient.js```. Lors du lancement, le client détecte le serveur DNS par défaut. Vous pouvez simplement taper Entrée pour ne pas le modifier. ATTENTION : cela ne fonctionne pas sous Termux, qui propose 8.8.8.8 par défaut. Il est fortement recommandé de récupérer le serveur DNS renvoyé par le fournisseur d'accès, grâce à une appli comme Network Info II.
 
 Ensuite, vous devez saisir les noms de domaine correspondant à l'envoi (SEND) et à la réception (RECV) de messages. Dans notre exemple, il s'agit de casend.xx.yy et carecv.xx.yy.
 
