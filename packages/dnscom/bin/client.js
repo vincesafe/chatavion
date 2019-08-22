@@ -1,8 +1,11 @@
 const base32 = require('hi-base32')
-const { Resolver } = require('dns').promises
+const { Resolver } = require('dns');
+const stream = require('stream')
+const util = require('util')
 
 const debug = require('debug')('dnscom:client')
 const error = require('debug')('dnscom:client:error')
+const lgMsg = require('debug')('dnscom:client:msg')
 
 /**
  * Make a DNS Client to send a message
@@ -12,10 +15,8 @@ const error = require('debug')('dnscom:client:error')
 function Client() {
   /**
    * DNS Resolver
-   * The dns.promises API provides an alternative set of asynchronous DNS
-   * methods that return Promise objects rather than using callbacks.
    *
-   * More informations on : https://nodejs.org/api/dns.html#dns_dns_promises_api
+   * More informations on : https://nodejs.org/api/dns.html
    *
    * @type    {dnsPromises}
    */
@@ -24,7 +25,7 @@ function Client() {
   /**
    * nextOffset of the next message to get
    *
-   * @type    {dnsPromises}
+   * @type    {number}
    */
   this.nextOffset = 1
 }
@@ -32,12 +33,12 @@ function Client() {
 module.exports = Client
 
 /**
- * Return IP the first adress string that is currently configured for DNS resolution
+ * Return IP the first address string that is currently configured for DNS resolution
  * or return `8.8.8.8`.
  *
  * More informations on : https://nodejs.org/api/dns.html#dns_dns_getservers
  *
- * @return    {string}     IP adress string
+ * @return    {string}     IP address string
  */
 Client.prototype.getDefaultServer = function() {
   try {
@@ -52,10 +53,10 @@ Client.prototype.getDefaultServer = function() {
  *
  * More informations on : https://nodejs.org/api/dns.html#dns_dns_setservers_servers
  *
- * @param    {string}  servers   IPs adressess strings
+ * @param    {string}  servers   IPs addresses strings
  */
 Client.prototype.setServers = function(servers) {
-  this.dnsResolver.setServers.call(this.dnsResolver, servers)
+  this.dnsResolver.setServers(servers)
 }
 
 /**
@@ -65,8 +66,12 @@ Client.prototype.setServers = function(servers) {
  *
  * @return   {array.<string>}     Return messages
  */
-Client.prototype.getMessages = async function(recvIp) {
-  return await recep.call(this, recvIp)
+Client.prototype.getMessages = function(recvIp) {
+  return recep.call(this, recvIp)
+}
+
+Client.prototype.getMessagesSync = async function(recvIp) {
+  return await recepSync.call(this, recvIp)
 }
 
 /**
@@ -77,97 +82,200 @@ Client.prototype.getMessages = async function(recvIp) {
  *
  * @return   {array.<string>}     Return messages
  */
-Client.prototype.sendMessage = async function(message, sendIp) {
-  return await sendm.call(this, message, sendIp)
+Client.prototype.sendMessage = function(message, sendIp, callback) {
+  return sendm.call(this, message, sendIp, callback)
 }
 
-async function sendm(message, sendIp) {
-  const req = base32.encode(message) + '.' + sendIp
-  debug('Will ask ' + this.dnsResolver.getServers()[0] + ' for ' + req)
+Client.prototype.sendMessageSync = async function(message, sendIp) {
+  return await sendmSync.call(this, message, sendIp)
+}
 
-  try {
-    return addresses = await this.dnsResolver.resolve4(req)
-  } catch (err) {
-    throw err
+
+function sendm(message, sendIp, callback) {
+  const query = base32.encode(message) + '.' + sendIp
+  debug('Will ask ' + this.dnsResolver.getServers()[0] + ' for ' + query)
+
+  this.dnsResolver.resolve4(query, (err, records) => {
+    const addresses = err ? [] : records
+    callback(!!addresses.includes('42.42.42.42'))
+  })
+}
+
+async function sendmSync(message, sendIp) {
+  const query = base32.encode(message) + '.' + sendIp
+  debug('Will ask ' + this.dnsResolver.getServers()[0] + ' for ' + query)
+
+  const addresses = await new Promise(resolve => {
+    this.dnsResolver.resolve4(query, (err, records) => {
+      resolve(err ? [] : records)
+    })
+  })
+
+  return !!addresses.includes('42.42.42.42')
+}
+
+const _MODE = {
+  TXT: 0,
+  AAAA: 1,
+  A: 2,
+  dico: [
+    [],
+    ['o', 'resolve6', ip6ascii],
+    ['n', 'resolve4', ip4ascii]
+  ]
+}
+
+function receptTxt(querySchema, chatStream, next) {
+  const args = arguments
+  this.dnsResolver.resolveTxt(util.format(querySchema, this.nextOffset), (err, records) => {
+    if (err) {
+      error('Error with receptTxt:', err)
+      next(err)
+      return
+    }
+
+    if (records.length > 0) {
+      lgMsg('new line:', records[0][0])
+      chatStream.write(records[0][0])
+      this.nextOffset++
+      receptTxt.apply(this, args)
+    } else {
+      next()
+    }
+  })
+}
+
+function receptIpvN(mode, querySchema, param, chatStream, next) {
+  const args = arguments
+
+  const data = _MODE.dico[mode]
+  const letter = data[0]
+  const resolveN = data[1] // resolveN -> 4 | 6
+  const ipNascii = data[2]
+
+  const query = util.format(querySchema, this.nextOffset, letter, param.colOffset)
+  const res = this.dnsResolver[resolveN](query, (err, records) => {
+    if (err) {
+      error('Error with receptIpvN:', err)
+      next(err)
+      return
+    }
+
+    const subs = (records.length > 0) ? ipNascii(records[0]) : false
+
+    if (subs !== false && (subs + param.line) !== "") {
+      if (!subs.length) { // no result: next line
+        lgMsg('new line:', param.line)
+        chatStream.write(param.line)
+        param.colOffset = 1
+        this.nextOffset++
+        param.line = ''
+      } else {
+        param.line += subs
+        param.colOffset++
+      }
+      receptIpvN.apply(this, args)
+    } else {
+      next()
+    }
+  })
+}
+
+function whatCanIuse(recvIp, answer) {
+  const checkResolve = (err, records, modeName, next) => {
+    if (!err && records.length > 0) {
+      // result found: current mode is fine
+      debug('Setting receive mode to', modeName)
+      answer(_MODE[modeName])
+      return
+    }
+    // let's try another thing
+    next()
   }
+
+  const callbackOnFail = {
+    TXT: () => {
+      // otherwise, try AAAA, then default to A
+      debug('No result for TXT Client, will try AAAA')
+
+      resolveMode('AAAA', 'm1o1.' + recvIp)
+    },
+    AAAA: () => {
+      // last chance, no need to try to choose mode
+      debug('Setting receive mode to A')
+      answer(_MODE.A)
+
+      // TODO: improve this part ? Maybe is usefull to throw an error if we can't communicate
+    }
+  }
+
+  const resolveMode = (modeName, query) => {
+    this.dnsResolver.resolve(query, modeName, (err, records) => {
+      // Result
+      checkResolve.call(this, err, records, modeName, callbackOnFail[modeName])
+    })
+  }
+
+  resolveMode('TXT', 'm1.' + recvIp)
 }
 
-async function recep(recvIp) {
-  const offset = this.nextOffset
+function recep(recvIp) {
+  const chatStream = new stream.PassThrough()
+
+  // -1 to avoid last \n
+  const end = () => this.nextOffset--
+
+  whatCanIuse.call(this, recvIp, (mode) => {
+    debug('mode is ' + mode)
+
+    // actual reception and display
+    if (mode == _MODE.TXT) {
+      receptTxt.call(this, `m%d.${recvIp}`, chatStream, end)
+    } else if (mode == _MODE.AAAA || mode == _MODE.A) {
+        const param = {
+          line: '',
+          colOffset: 1
+        }
+      receptIpvN.call(this, mode, `m%d%s%d.${recvIp}`, param, chatStream, end)
+    } else {
+      throw Error("Unknown mode")
+    }   
+  })
+
+  return chatStream
+}
+
+async function recepSync(recvIp) {
+  const chatStream = new stream.PassThrough()
+
+  // reception mode: 0 TXT / 1 AAAA / 2 A
+  let mode = await new Promise(resolve => {
+    whatCanIuse.call(this, recvIp, resolve)
+  })
 
   const messages = []
 
-  let mode = 2; // reception mode: 0 TXT / 1 AAAA / 2 A
-  let res = ''
-  try {
-    const query = 'm1.' + recvIp
-    res = await this.dnsResolver.resolveTxt(query)
-  } catch (err) {
-    error('Exception with dnsResolver: ' + err)
-    error(err)
-  }
-  if (res.length > 0) { // result found: TXT mode is fine
-    mode = 0
-    debug('Setting receive mode to TXT')
-    //    debug('res is ' + res)
-  } else { // otherwise, try AAAA, then default to A
-    debug('No result for TXT Client, will try AAAA')
-    try {
-      const query = 'm1o1.' + recvIp
-      res = await this.dnsResolver.resolve6(query)
-    } catch (err) {}
-    if (res.length > 0) { // result found: AAAA mode is ok
-      mode = 1
-      debug('Setting receive mode to AAAA')
-      // debug('res is ' + res)
-    } else // last chance, no need to try to choose mode
-      debug('Setting receive mode to A')
-  }
+  chatStream.on('data', (chunk) => {
+    messages.push(chunk.toString())
+  })
+
+  mode = 1
+
+  debug('mode is ' + mode)
 
   // actual reception and display
-  if (mode == 0) { // TXT mode
-    do {
-      try {
-        const query = 'm' + this.nextOffset + '.' + recvIp
-        res = await this.dnsResolver.resolveTxt(query)
-        messages.push(res[0][0])
-        this.nextOffset++
-      } catch (err) {
-        res = ''
+  if (mode == _MODE.TXT) {
+    await new Promise(resolve => {
+      receptTxt.call(this, `m%d.${recvIp}`, chatStream, resolve)
+    })
+  } else if (mode == _MODE.AAAA || mode == _MODE.A) {
+    await new Promise(resolve => {
+      const param = {
+        line: '',
+        colOffset: 1
       }
-    } while (res.length > 0)
-  } else if (mode == 1 || mode == 2) { // AAAA mode & A mode
-    let line = ''
-    do {
-      let colOffset = 1
-      if (colOffset == 1) line = ''; // new line
-      try {
-        let subs
-        if (mode == 1) { // AAAA mode
-          const query = 'm' + offset + 'o' + colOffset + '.' + recvIp
-          const res = await this.dnsResolver.resolve6(query)
-          subs = ip6ascii(res[0])
-        } else { // A mode
-          const query = 'm' + offset + 'n' + colOffset + '.' + recvIp
-          const res = await this.dnsResolver.resolve4(query)
-          subs = ip4ascii(res[0])
-        }
-
-        if (subs.length > 0) {
-          line = line + subs
-          colOffset++
-        } else { // no result: next line
-          colOffset = 1
-          this.nextOffset++
-          messages.push(line)
-        }
-      } catch (err) {
-        line = ''
-        error('End of messages. Next offset: ' + offset)
-        error('Exception: ' + err)
-        error(err)
-      }
-    } while (line != '')
+      receptIpvN.call(this, mode, `m%d%s%d.${recvIp}`, param, chatStream, resolve)
+    })
   } else {
     throw Error("Unknown mode")
   }

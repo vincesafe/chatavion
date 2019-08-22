@@ -30,7 +30,7 @@
   "dependencies": {
     "debug": "4.1.1",
     "dnscom": "file:../dnscom",
-    "readline-sync": "1.4.10",
+    "serverline": "^1.4.0",
     "yargs-parser": "13.1.1"
   }
 }
