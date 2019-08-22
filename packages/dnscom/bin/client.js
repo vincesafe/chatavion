@@ -98,9 +98,9 @@ async function recep(recvIp) {
   const messages = []
 
   let mode = 2; // reception mode: 0 TXT / 1 AAAA / 2 A
-  let query = 'm1.' + recvIp
   let res = ''
   try {
+    const query = 'm1.' + recvIp
     res = await this.dnsResolver.resolveTxt(query)
   } catch (err) {
     error('Exception with dnsResolver: ' + err)
@@ -112,8 +112,8 @@ async function recep(recvIp) {
     //    debug('res is ' + res)
   } else { // otherwise, try AAAA, then default to A
     debug('No result for TXT Client, will try AAAA')
-    query = 'm1o1.' + recvIp
     try {
+      const query = 'm1o1.' + recvIp
       res = await this.dnsResolver.resolve6(query)
     } catch (err) {}
     if (res.length > 0) { // result found: AAAA mode is ok
@@ -127,8 +127,8 @@ async function recep(recvIp) {
   // actual reception and display
   if (mode == 0) { // TXT mode
     do {
-      query = 'm' + this.nextOffset + '.' + recvIp
       try {
+        const query = 'm' + this.nextOffset + '.' + recvIp
         res = await this.dnsResolver.resolveTxt(query)
         messages.push(res[0][0])
         this.nextOffset++
@@ -144,11 +144,11 @@ async function recep(recvIp) {
       try {
         let subs
         if (mode == 1) { // AAAA mode
-          query = 'm' + offset + 'o' + colOffset + '.' + recvIp
+          const query = 'm' + offset + 'o' + colOffset + '.' + recvIp
           const res = await this.dnsResolver.resolve6(query)
           subs = ip6ascii(res[0])
         } else { // A mode
-          query = 'm' + offset + 'n' + colOffset + '.' + recvIp
+          const query = 'm' + offset + 'n' + colOffset + '.' + recvIp
           const res = await this.dnsResolver.resolve4(query)
           subs = ip4ascii(res[0])
         }
