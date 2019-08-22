@@ -1,24 +1,21 @@
 {
-  "name": "chatavion",
+  "name": "dnscom",
   "private": true,
   "version": "0.0.1",
-  "description": "Chat with DNS messaging system",
+  "description": "API for DNS messaging system",
   "main": "bin/index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "client": "node bin/caclient.js",
-    "server": "node bin/caserv.js"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/vincesafe/chatavion.git"
+    "url": "https://github.com/vincesafe/chatavion/tree/master/packages/dnscom"
   },
   "keywords": [
     "chat",
     "dns",
     "message",
-    "plane",
-    "avion"
+    "communication"
   ],
   "author": "vincesafe",
   "license": "SEE LICENCE IN GIT",
@@ -27,8 +24,8 @@
   },
   "homepage": "https://github.com/vincesafe/chatavion#readme",
   "dependencies": {
-    "hi-base32": "^0.5.0",
-    "node-named": "0.0.1",
-    "readline-sync": "^1.4.10"
+    "debug": "4.1.1",
+    "hi-base32": "0.5.0",
+    "node-named": "0.0.1"
   }
 }
