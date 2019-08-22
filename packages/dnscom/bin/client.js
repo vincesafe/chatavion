@@ -142,14 +142,15 @@ async function recep(recvIp) {
       let colOffset = 1
       if (colOffset == 1) line = ''; // new line
       try {
+        let subs
         if (mode == 1) { // AAAA mode
           query = 'm' + offset + 'o' + colOffset + '.' + recvIp
           const res = await this.dnsResolver.resolve6(query)
-          const subs = ip6ascii(res[0])
+          subs = ip6ascii(res[0])
         } else { // A mode
           query = 'm' + offset + 'n' + colOffset + '.' + recvIp
           const res = await this.dnsResolver.resolve4(query)
-          const subs = ip4ascii(res[0])
+          subs = ip4ascii(res[0])
         }
 
         if (subs.length > 0) {
