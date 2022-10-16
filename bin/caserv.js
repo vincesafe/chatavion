@@ -104,7 +104,7 @@ server.on('query', function(query) {
       // load log file
       var fullLog = fs.readFileSync(logFile, "ascii");
       var logLines = fullLog.split("\n");
-      var reqType = 2;  // type of request. mX (TXT) = 0, mX.oY (AAAA) = 1, mX.nY (A) = 2
+      var reqType = 2;  // type of request. mX (TXT) = 0, mXoY (AAAA) = 1, mXnY (A) = 2
       var tmp = words[0].split("n");
       var lineOffset = 0;
       var colOffset = 0;
