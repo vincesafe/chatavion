@@ -58,7 +58,7 @@ server.on('query', function(query) {
         type = "RECV";
     else {
         try {
-            var test = base32.decode(words[0]);
+            var test = base32.decode(words[0].toUpperCase());
             if(test != "")  // able to decode: it is a message
                 type = "SEND";
         } catch (e) {   // unable to decode: type void
