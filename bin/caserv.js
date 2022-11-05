@@ -49,7 +49,7 @@ server.listen(53, '0.0.0.0', function() {
 });
 
 server.on('query', function(query) {
-    var domain = query.name();
+    var domain = query.name().toLowerCase();
     console.log('Query: ' + domain);
 
     var type = "";
