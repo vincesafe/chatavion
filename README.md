@@ -1,10 +1,10 @@
 # chatavion
 Système de messagerie sur DNS - Messaging system over DNS
 
-ATTENTION ! CECI EST UN PROJET EXPÉRIMENTAL POTENTIELLEMENT INSTABLE. IL DOIT ÊTRE UTILISÉ UNIQUEMENT SUR MACHINE VIRTUELLE DÉDIÉE.
+ATTENTION ! CECI EST UN PROJET EXPÉRIMENTAL POTENTIELLEMENT INSTABLE. IL EST CONSEILLÉ D'INSTALLER LE SERVEUR SUR UNE MACHINE DÉDIÉE.
 LES CONTRIBUTIONS SONT LES BIENVENUES. 
 
-WARNING! THIS IS AN EXPERIMENTAL, POTENTIALLY UNSTABLE PROJECT. IT SHOULD BE USED ONLY ON A DEDICATED VIRTUAL MACHINE. CONTRIBUTIONS ARE WELCOME.
+WARNING! THIS IS AN EXPERIMENTAL, POTENTIALLY UNSTABLE PROJECT. THE SERVER SHOULD BE USED ON A DEDICATED MACHINE. CONTRIBUTIONS ARE WELCOME.
 
 For more information in English, please see README.en.md
 
@@ -14,12 +14,12 @@ Il a été créé pour discuter depuis les réseaux Wi-Fi d'avion sans payer et 
 
 Conçu initialement comme une preuve de concept d'envoi de message d'urgence en avion, Chatavion est passé d'un assemblage dégueulasse de bouts de code à un vrai programme en NodeJS !
 
-Chatavion se décompose en 4 parties : 
+Chatavion se décompose en 3 parties : 
  - Un client en NodeJS, testé sur Linux et Android avec Termux
  - Un serveur en NodeJS
  - Une partie configuration DNS, qui peut être déléguée à un fournisseur comme freedns.afraid.org 
  
-Ce fonctionnement est schématisé sur [ce forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/?page=2#p206584). 
+Ce fonctionnement est schématisé sur [ce forum](https://zestedesavoir.com/forums/sujet/12757/chatavion-une-messagerie-passe-partout/?page=2#p206584). Pour la version "Community", c'est très légèrement différent, car seule une entrée NS est utilisée.
  
 1. Configuration DNS préalable
 
@@ -27,24 +27,26 @@ Le serveur doit disposer d'une adresse IPv4 fixe. Il est nécessaire de lui attr
 
 chatavion.ca    33.33.133.133
 
-Ensuite, deux autres domaines doivent renvoyer les requêtes reçues à ces serveurs, qui tâcheront de les interpréter. 
-Pour cela, on définit des entrées de type NS. Exemple :
+Ensuite, un autre domaine doit renvoyer les requêtes reçues à ce serveur, qui tâchera de les interpréter. 
+Pour cela, on définit une entrée de type NS. Exemple :
 
-carecv.xx.yy   NS   chatavion.ca
-
-casend.xx.yy      NS   chatavion.ca
+caserv.xx.yy   NS   chatavion.ca
 
 2. Serveur
 
 Le serveur fonctionne avec NodeJS et les dépendances hi-base32 et node-named. Pour les installer, utilisez la commande suivante dans le même répertoire que caserv.js : ```npm install hi-base32 node-named```. ATTENTION ! Le paquet node-named contient un bug qui peut empêcher l'exécution du programme. Pour le corriger, modifiez le fichier node_modules/node-named/lib/server.js. À la ligne 53, remplacez le code par ```this._socket = dgram.createSocket('udp4');```.
 
-Modifiez le fichier caserv.js pour faire correspondre les noms de domaine à votre configuration. Vous pouvez ensuite lancer le serveur en tâche de fond. Si vous utilisez Linux, vous pouvez exécuter ```nohup node caserv.js &```
+Modifiez le fichier caserv.js pour faire correspondre le nom de domaine (SRVDOMAIN) à votre configuration, ainsi que pour définir les communautés à accueillir. Chaque communauté doit disposer un fichier de log correspondant, à créer avant l'exécution. Exemple : pour la communauté "github", il faut créer le fichier "github.log" dans le même répertoire. Vous pouvez ensuite lancer le serveur en tâche de fond. Si vous utilisez Linux, vous pouvez exécuter ```nohup node caserv.js &```
 
-Le programme intercepte les requêtes DNS qu'il reçoit. S'il détecte une requête qui contient le nom de domaine d'envoi (casend.xx.yy dans notre exemple), il tente de décoder la première partie de la requête en base32 et enregistre le message dans un fichier de conversation (miaou.txt par défaut). S'il détecte dans une requête le nom de domaine de réception (carecv.xx.yy dans l'exemple), il renvoie un extrait de la conversation correspondant à la demande. 3 cas sont possibles : 
+Le programme intercepte les requêtes DNS qu'il reçoit. S'il détecte une requête qui commence par un "m", c'est *a priori* une demande de réception de message (type RECV). Sinon, il tente de décoder la première partie de la requête en base32. Si ça fonctionne, c'est un message à enregistrer (type SEND). Si le nom d'une communauté n'est pas détecté dans la requête, le type est invalidé afin qu'elle ne soit pas traitée.
 
-- mX.carecv.xx.yy renvoie la ligne X de la conversation sous forme de texte directement
-- mXnY.carecv.xx.yy renvoie 4 caractères à partir de la colonne Y de la ligne X sous forme d'adresse IPv4
-- mXoY.carecv.xx.yy renvoie 16 caractères à partir de la colonne Y de la ligne X sous forme d'adresse IPv6
+Dans le cas d'une requête RECV, le serveur renvoie un extrait de la conversation correspondant à la demande. 3 cas sont possibles : 
+
+- mX.github.carserv.xx.yy renvoie la ligne X de la conversation sous forme de texte directement
+- mXnY.github.caserv.xx.yy renvoie 4 caractères à partir de la colonne Y de la ligne X sous forme d'adresse IPv4
+- mXoY.github.caserv.xx.yy renvoie 16 caractères à partir de la colonne Y de la ligne X sous forme d'adresse IPv6
+
+Dans le cas d'une requête SEND, le message est décodé et ajouté à la conversation correspondant à la communauté, précédé de la date et du préfixe "Avion :". Ce dernier est commun à tous les messages envoyés par un client Chatavion, par opposition à d'autres clients qui peuvent intervenir dans la conversation de manière plus conventionnelle, par exemple au moyen d'une interface web.
 
 3. Client
 
@@ -54,7 +56,7 @@ Un client a été conçu pour Android, pour fonctionner avec l'émulateur de ter
 
 Le client Chatavion peut maintenant être lancé avec la commande ```node caclient.js```. Lors du lancement, le client détecte le serveur DNS par défaut. Vous pouvez simplement taper Entrée pour ne pas le modifier. ATTENTION : cela ne fonctionne pas sous Termux, qui propose 8.8.8.8 par défaut. Il est fortement recommandé de récupérer le serveur DNS renvoyé par le fournisseur d'accès, grâce à une appli comme Network Info II.
 
-Ensuite, vous devez saisir les noms de domaine correspondant à l'envoi (SEND) et à la réception (RECV) de messages. Dans notre exemple, il s'agit de casend.xx.yy et carecv.xx.yy.
+Ensuite, vous devez saisir les noms de domaine correspondant à l'envoi (SEND) et à la réception (RECV) de messages. Dans le cas de la version Community, les deux sont identiques. Pour reprendre notre exemple, il s'agit de caserv.xx.yy.
 
 Le client récupère immédiatement les messages de la conversation du serveur. Pour envoyer un message, tapez s suivi de votre message. Exemple :
 
